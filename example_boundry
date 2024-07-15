@@ -1,0 +1,12 @@
+POST /upload HTTP/1.1
+Host: example.com
+Content-Type: multipart/form-data; boundary=boundary_string_here
+Content-Length: ...
+
+--boundary_string_here
+Content-Disposition: form-data; name="file"; filename="example.txt"
+Content-Type: text/plain
+
+... contents of example.txt file ...
+
+--boundary_string_here--

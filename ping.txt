@@ -1,0 +1,4 @@
+total 24
+-rwxrwxr-x 1 ayoub ayoub 16768 Jul 15 15:15 a.out
+-rw-rw-r-- 1 ayoub ayoub   983 Jul 15 15:15 execve.cpp
+-rwxrwxr-x 1 ayoub ayoub     0 Jul 15 15:15 ping.txt
