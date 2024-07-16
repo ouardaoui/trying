@@ -108,6 +108,8 @@ int main() {
     request << "--" << boundary << "--\r\n";
 
     std::string req = request.str();
+    std::cout << req ;
+    exit(0);
     std::string method;
     std::string path;
     std::string version;

@@ -61,10 +61,7 @@ std::string cgi_handler(std::string name,std::string cgi_path , int h, std::stri
     else
     {
         if (h == 1)
-        {
             if(write(fdin[1], body.c_str(), body.length()) == -1);
-                std::perror("Error writing to file descriptor");
-        }
         int result;
         while ((result = waitpid(pid, &status, WNOHANG)) == 0)
         {
@@ -125,16 +122,16 @@ int main()
     std::string name = "./cgi/login.py";
     char *env[5];
     env[0] = strdup("GATEWAY_INTERFACE=CGI/1.1");
-	env[1] = strdup("REQUEST_METHOD=POST");
-	//query = "QUERY_STRING=" + query; //fro get
-	//env[2] = (char*)query.c_str(); 
-    std::string bodyLen = "CONTENT_LENGTH=26";
-    env[2] = (char *)bodyLen.c_str();
+	env[1] = strdup("REQUEST_METHOD=GET");
+	query = "QUERY_STRING=" + query; //fro get
+	env[2] = (char*)query.c_str(); 
+    //std::string bodyLen = "CONTENT_LENGTH=26";
+    //env[2] = (char *)bodyLen.c_str();
 	std::string scriptFileName = "SCRIPT_FILENAME=" + name;
 	env[3] = (char *)scriptFileName.c_str();
 	env[4] = NULL;
     //std::string cgi_path = "/usr/bin/python3";
     //std::string name = "./cgi/script.py";
-    std::string out = cgi_handler(name , cgi_path,1, body, env);
+    std::string out = cgi_handler(name , cgi_path,0, body, env);
     std::cout << out ;
 }
