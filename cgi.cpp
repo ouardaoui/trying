@@ -5,16 +5,18 @@
 
 
 // h = 1 if post 
-// h = 0 if get 
-std::string cgi_hanlder(std::string name,std::string cgi_path , int h, std::string body, char **env)
+// h = 0 if get
+
+
+std::string cgi_handler(std::string name,std::string cgi_path , int h, std::string body, char **env)
 {
     std::string response;
     int status;
-    int fd[2];
+    int fdin[2];
     pid_t pid;
     int start = time(0);
     
-    if (pipe(fd) == -1) {
+    if (pipe(fdin) == -1) {
         perror("pipe");
         exit(1);
     }
@@ -26,22 +28,22 @@ std::string cgi_hanlder(std::string name,std::string cgi_path , int h, std::stri
     
     if (pid == 0)
     {
-        if (h) //  we have post  
+        if (h == 1) //  we have post  
         {
-            if (dup2(fd[0], 0) == -1)
+            if (dup2(fdin[0], 0) == -1)
             {
                 perror("dup2");
                 exit(1);
             }
         }
-        if (dup2(fd[1], 1) == -1)
+        if (dup2(fdin[1], 1) == -1)
         {
             perror("dup2");
             exit(1);
         }
 
-        close(fd[0]);
-        close(fd[1]);
+        close(fdin[0]);
+        close(fdin[1]);
 
         char **av = new char *[3];
         av[0] = new char[cgi_path.length() + 1];
@@ -58,9 +60,9 @@ std::string cgi_hanlder(std::string name,std::string cgi_path , int h, std::stri
     }
     else
     {
-        if (h)
+        if (h == 1)
         {
-            if(write(fd[1], body.c_str(), body.length()) == -1);
+            if(write(fdin[1], body.c_str(), body.length()) == -1);
                 std::perror("Error writing to file descriptor");
         }
         int result;
@@ -72,7 +74,7 @@ std::string cgi_hanlder(std::string name,std::string cgi_path , int h, std::stri
                 {
                     response = "HTTP/1.1 500 Internal Server Error";
                     kill(pid, SIGKILL);
-                    close(fd[1]);
+                    close(fdin[1]);
                     return response;
                 }
                 sleep(1);
@@ -82,12 +84,12 @@ std::string cgi_hanlder(std::string name,std::string cgi_path , int h, std::stri
         {
             return "";
         }
-        close(fd[1]);
+        close(fdin[1]);
         char buffer[1024];
        
         while (true)
         {
-            int len = read(fd[0], buffer, 1023);
+            int len = read(fdin[0], buffer, 1023);
             if (len <= 0)
                 break;
             if (len == 1023)
@@ -113,6 +115,8 @@ std::string cgi_hanlder(std::string name,std::string cgi_path , int h, std::stri
 		env[3] = (char *)scriptFileName.c_str();
 		env[4] = NULL;
 */
+
+
 int main()
 {
      std::string body = "username=abass&password=23";
@@ -121,15 +125,16 @@ int main()
     std::string name = "./cgi/login.py";
     char *env[5];
     env[0] = strdup("GATEWAY_INTERFACE=CGI/1.1");
-	env[1] = strdup("REQUEST_METHOD=GET");
-	//query = "QUERY_STRING=" + query; fro get
+	env[1] = strdup("REQUEST_METHOD=POST");
+	//query = "QUERY_STRING=" + query; //fro get
 	//env[2] = (char*)query.c_str(); 
     std::string bodyLen = "CONTENT_LENGTH=26";
+    env[2] = (char *)bodyLen.c_str();
 	std::string scriptFileName = "SCRIPT_FILENAME=" + name;
 	env[3] = (char *)scriptFileName.c_str();
 	env[4] = NULL;
     //std::string cgi_path = "/usr/bin/python3";
     //std::string name = "./cgi/script.py";
-    std::string out = cgi_hanlder(name , cgi_path,1, body, env);
+    std::string out = cgi_handler(name , cgi_path,1, body, env);
     std::cout << out ;
 }
