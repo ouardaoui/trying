@@ -136,7 +136,7 @@ int free_env(char **env)
 
 int main()
 {
-     std::string body = "username=abass&age=23";
+    std::string body = "username=abass&age=23";
     std::string query = body;
     std::string cgi_path = "/usr/bin/python3";
     std::string name = "pages/cgi/form.py";
