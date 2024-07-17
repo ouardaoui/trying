@@ -2,11 +2,18 @@
 #include <unistd.h>
 #include <cstring>
 #include <sys/wait.h>
-
+#include <csignal>
 
 // h = 1 if post 
 // h = 0 if get
 
+ char* str_dup(const std::string& str)
+{
+    char* res = new char[str.size() + 1];
+    std::strcpy(res, str.c_str());
+    res[str.size()] = '\0'; // Ensure null-termination
+    return res;
+}
 
 std::string cgi_handler(std::string name,std::string cgi_path , int h, std::string body, char **env)
 {
@@ -60,8 +67,8 @@ std::string cgi_handler(std::string name,std::string cgi_path , int h, std::stri
     }
     else
     {
-        if (h == 1)
-            if(write(fdin[1], body.c_str(), body.length()) == -1);
+        // if (h == 1)
+            write(fdin[1], body.c_str(), body.length());
         int result;
         while ((result = waitpid(pid, &status, WNOHANG)) == 0)
         {
@@ -113,25 +120,42 @@ std::string cgi_handler(std::string name,std::string cgi_path , int h, std::stri
 		env[4] = NULL;
 */
 
+int free_env(char **env)
+{
+    int i = 0;
+    while (env[i]) {
+        if(env[i])
+        {
+            delete env[i];
+            env[i] = NULL;
+        }
+        i++;
+    }
+    return 0;
+}
 
 int main()
 {
-     std::string body = "username=abass&password=23";
+     std::string body = "username=abass&age=23";
     std::string query = body;
     std::string cgi_path = "/usr/bin/python3";
-    std::string name = "./cgi/login.py";
+    std::string name = "pages/cgi/form.py";
     char *env[5];
-    env[0] = strdup("GATEWAY_INTERFACE=CGI/1.1");
-	env[1] = strdup("REQUEST_METHOD=GET");
-	query = "QUERY_STRING=" + query; //fro get
-	env[2] = (char*)query.c_str(); 
-    //std::string bodyLen = "CONTENT_LENGTH=26";
-    //env[2] = (char *)bodyLen.c_str();
+    env[0] = str_dup("GATEWAY_INTERFACE=CGI/1.1");
+	env[1] = str_dup("REQUEST_METHOD=POST");
+	//query = "QUERY_STRING=" + query; //fro get
+	//env[2] = str_dup((char*)query.c_str()); 
+    std::cout << body.size();
+    std::string bodyLen = "CONTENT_LENGTH="+std::to_string(body.size());
+    env[2] = str_dup((char *)bodyLen.c_str());
 	std::string scriptFileName = "SCRIPT_FILENAME=" + name;
-	env[3] = (char *)scriptFileName.c_str();
-	env[4] = NULL;
+	env[3] = str_dup((char *)scriptFileName.c_str());
+	env[4] = NULL;  
     //std::string cgi_path = "/usr/bin/python3";
     //std::string name = "./cgi/script.py";
-    std::string out = cgi_handler(name , cgi_path,0, body, env);
+    std::string out = cgi_handler(name , cgi_path,1, body, env);
+    free_env(env);
     std::cout << out ;
+    return 0;
 }
+
